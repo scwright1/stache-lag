@@ -1,0 +1,4 @@
+Synthesize sounds based on GPS data (speed at intervals = note)
+Heatmap for team efficiency
+create fractals based on GPS data
+Game levels based on gps data

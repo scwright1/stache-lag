@@ -1,0 +1,62 @@
+@sl-red: #f38181;
+@sl-yellow: #fce38a;
+@sl-green: #eaffd0;
+@sl-blue: #95e1d3;
+@sl-grey: #393e46;
+@sl-white: #f5f5f5;
+
+
+
+html, body {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: @sl-grey;
+    font-family: "Source Sans Pro", sans-serif;
+    color: @sl-white;
+}
+
+@media screen and (min-width: 320px) {
+    body {
+        > #headerbar {
+            width: 100%;
+            height: 10px;
+            margin: 0;
+            padding: 0;
+
+            > .colorsplash {
+                float: left;
+                width: 25%;
+                height: 100%;
+
+                &.a {
+                    background-color: @sl-red;
+                }
+                &.b {
+                    background-color: @sl-yellow;
+                }
+                &.c {
+                    background-color: @sl-green;
+                }
+                &.d {
+                    background-color: @sl-blue;
+                }
+            }
+        }
+
+        > #content {
+            > #controlbar {
+                width: 100%;
+                height: 80px;
+                > .title {
+                    font-family: "Prompt", "Source Sans Pro", sans-serif;
+                    float: left;
+                    width: 60%;
+                    height: 60px;
+                    margin: 10px;
+                    line-height: 60px;
+                }
+            }
+        }
+    }
+}
