@@ -1,5 +1,4 @@
-
-document.addEventListener('DOMContentLoaded', function() {
+$(document).ready(function() {
     T.init();
     //off we go!
     SLS.loadData('c6002016').then(SLS.processData).then(SLS.processTones).catch(function(err){
@@ -42,7 +41,6 @@ if (typeof T === "undefined") {
 
 }
 
-
 /**
  * SLS namespace
  */
@@ -74,6 +72,13 @@ if (typeof SLS === "undefined") {
         var processed = new Promise(function(resolve, reject) {
             SLS.teams = data;
             SLS.teams.forEach(function(team, i) {
+
+                //Append the team as a new div in the players div (for it's player)
+                //pulled in jquery for this, because it's easier to do DOM manipulation with it
+                var playerDiv = $("<div class='player bg-dark-complimentary'></div>");
+                $("#players").append(playerDiv);
+                playerDiv.append("<div class='team-name'>"+team.name+"</div>");
+                playerDiv.append("<div class='player-controls' data-team-id="+i+"><button>Stop</button> <button>Play</button></div>");
 
                 //read all of the positions into an array, so that we can manipulate it easier
                 var positionArray = [];
