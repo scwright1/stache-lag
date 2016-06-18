@@ -1,7 +1,7 @@
 $(document).ready(function() {
     T.init();
     //off we go!
-    SLS.loadData('c6002016').then(SLS.processData).then(SLS.processTones).catch(function(err){
+    SLS.loadData('c6002016').then(SLS.processData).catch(function(err){
         alert(err);
     });
 });
@@ -14,20 +14,13 @@ if (typeof T === "undefined") {
 
     var T = {};
 
-    T.player = {};
-
     T.keys = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
     T.toneMap = [];
 
-    T.conductor = new BandJS();
-
-    T.baseInstrument = {};
+    T.songMap = [];
 
     T.init = function() {
-        T.conductor.setTimeSignature(4,4);
-        T.conductor.setTempo(120);
-        T.baseInstrument = T.conductor.createInstrument('square');
 
         for (var i = 0; i < 9; i++) {
             T.keys.forEach(function(key, index) {
@@ -78,7 +71,7 @@ if (typeof SLS === "undefined") {
                 var playerDiv = $("<div class='player bg-dark-complimentary'></div>");
                 $("#players").append(playerDiv);
                 playerDiv.append("<div class='team-name'>"+team.name+"</div>");
-                playerDiv.append("<div class='player-controls' data-team-id="+i+"><button>Stop</button> <button>Play</button></div>");
+                playerDiv.append("<div class='player-controls' data-team-id="+i+"><button onclick='SLS.stop(this);'>Stop</button> <button onclick='SLS.play(this);'>Play</button></div>");
 
                 //read all of the positions into an array, so that we can manipulate it easier
                 var positionArray = [];
@@ -134,32 +127,65 @@ if (typeof SLS === "undefined") {
         return processed;
     };
 
-    SLS.processTones = function() {
-        var team = SLS.tones[0];
-        var tones = team.Tones;
+    SLS.processTones = function(team) {
 
-        // do the mario intro, because lol
-        T.baseInstrument.note('sixteenth', 'E5, F#4')
-        .note('sixteenth', 'E5, F#4')
-        .rest('sixteenth')
-        .note('sixteenth', 'E5, F#4');
-        T.baseInstrument.rest('sixteenth')
-        .note('sixteenth', 'C5, F#4')
-        .note('sixteenth', 'E5, F#4')
-        .rest('sixteenth');
-        T.baseInstrument.note('sixteenth', 'G5, B4, G4')
-        .rest('sixteenth')
-        .rest('eighth');
-        T.baseInstrument.note('sixteenth', 'G4')
-        .rest('sixteenth')
-        .rest('eighth');
-        ///////
+        var isPresent = SLS.getArrayIndexForObjWithAttr(T.songMap, "Team", team);
 
-        tones.forEach(function(tone, index) {
-            //so we have our tone index, now we need to match it up to the right tone
-            //should be able to generate a tone and play it
-            T.baseInstrument.note('eighth', T.toneMap[tone]);
-        });
-        T.player = T.conductor.finish();
+        if(isPresent === -1) {
+
+            //create a new BandJS instance (we do this because we BandJS is pretty poor at handling multi-instances)
+            //now, this "song" will be relative to this conductor, so we can start/pause/stop it as we like
+            var conductor = new BandJS();
+            conductor.setTempo(120);
+            conductor.setTimeSignature(4,4);
+            var song = conductor.createInstrument('square');
+            SLS.tones[team].Tones.forEach(function(tone, j) {
+                //so we have our tone index, now we need to match it up to the right tone
+                //should be able to generate a tone and play it
+                song.note('eighth', T.toneMap[tone]);
+            });
+
+            var player = conductor.finish();
+            var length = conductor.getTotalSeconds();
+            var songRef = T.songMap.push({"Team": team, "Conductor": conductor, "Player": player, "Playing": true}) - 1;
+            T.songMap[songRef].Player.play();
+        } else {
+            if(T.songMap[isPresent].Playing === true) {
+                //already playing, so we don't do anything
+            } else {
+                T.songMap[isPresent].Playing = true;
+                T.songMap[isPresent].Player.play();
+            }
+
+        }
     }
+
+    SLS.play = function(obj) {
+        var id = $(obj).parent().data('team-id');
+        SLS.processTones(id);
+    }
+
+    SLS.stop = function(obj) {
+        var id = $(obj).parent().data('team-id');
+        var index = SLS.getArrayIndexForObjWithAttr(T.songMap, "Team", id);
+        if(index !== -1) {
+            T.songMap[index].Player.stop();
+            T.songMap[index].Playing = false;
+
+            //GC remove the last played song (we do this because BandJS doesn't handle multi-instancing very well)
+            //T.songMap.splice(index, 1);
+        } else {
+            //no valid index to stop
+        }
+    }
+
+    //helper function, find array index of an object with a particular attribute
+    SLS.getArrayIndexForObjWithAttr = function(array, attr, value) {
+    for(var i = 0; i < array.length; i++) {
+        if(array[i].hasOwnProperty(attr) && array[i][attr] === value) {
+            return i;
+        }
+    }
+    return -1;
+}
 }
