@@ -71,7 +71,7 @@ if (typeof SLS === "undefined") {
                 var playerDiv = $("<div class='player bg-dark-complimentary'></div>");
                 $("#players").append(playerDiv);
                 playerDiv.append("<div class='team-name'>"+team.name+"</div>");
-                playerDiv.append("<div class='player-controls' data-team-id="+i+"><button onclick='SLS.stop(this);'>Stop</button> <button onclick='SLS.play(this);'>Play</button></div>");
+                playerDiv.append("<div class='player-controls' data-team-id="+i+"><button onclick='SLS.stop(this);'>Stop</button> <button onclick='SLS.play_pause(this);'>Play</button></div>");
 
                 //read all of the positions into an array, so that we can manipulate it easier
                 var positionArray = [];
@@ -128,41 +128,41 @@ if (typeof SLS === "undefined") {
     };
 
     SLS.processTones = function(team) {
+        //create a new BandJS instance (we do this because we BandJS is pretty poor at handling multi-instances)
+        //now, this "song" will be relative to this conductor, so we can start/pause/stop it as we like
+        var conductor = new BandJS();
+        conductor.setTempo(120);
+        conductor.setTimeSignature(4,4);
+        var song = conductor.createInstrument('square');
+        SLS.tones[team].Tones.forEach(function(tone, j) {
+            //so we have our tone index, now we need to match it up to the right tone
+            //should be able to generate a tone and play it
+            song.note('eighth', T.toneMap[tone]);
+        });
 
-        var isPresent = SLS.getArrayIndexForObjWithAttr(T.songMap, "Team", team);
-
-        if(isPresent === -1) {
-
-            //create a new BandJS instance (we do this because we BandJS is pretty poor at handling multi-instances)
-            //now, this "song" will be relative to this conductor, so we can start/pause/stop it as we like
-            var conductor = new BandJS();
-            conductor.setTempo(120);
-            conductor.setTimeSignature(4,4);
-            var song = conductor.createInstrument('square');
-            SLS.tones[team].Tones.forEach(function(tone, j) {
-                //so we have our tone index, now we need to match it up to the right tone
-                //should be able to generate a tone and play it
-                song.note('eighth', T.toneMap[tone]);
-            });
-
-            var player = conductor.finish();
-            var length = conductor.getTotalSeconds();
-            var songRef = T.songMap.push({"Team": team, "Conductor": conductor, "Player": player, "Playing": true}) - 1;
-            T.songMap[songRef].Player.play();
-        } else {
-            if(T.songMap[isPresent].Playing === true) {
-                //already playing, so we don't do anything
-            } else {
-                T.songMap[isPresent].Playing = true;
-                T.songMap[isPresent].Player.play();
-            }
-
-        }
+        var player = conductor.finish();
+        var length = conductor.getTotalSeconds();
+        var songRef = T.songMap.push({"Team": team, "Conductor": conductor, "Player": player, "Playing": true}) - 1;
+        T.songMap[songRef].Player.play();
     }
 
-    SLS.play = function(obj) {
+    SLS.play_pause = function(obj) {
         var id = $(obj).parent().data('team-id');
-        SLS.processTones(id);
+        var index = SLS.getArrayIndexForObjWithAttr(T.songMap, "Team", id);
+        if(index !== -1) {
+            if(T.songMap[index].Playing === true) {
+                T.songMap[index].Player.pause();
+                T.songMap[index].Playing = false;
+                $(obj).text('Play');
+            } else {
+                T.songMap[index].Player.play();
+                T.songMap[index].Playing = true;
+                $(obj).text('Pause');
+            }
+        } else {
+            SLS.processTones(id);
+            $(obj).text('Pause');
+        }
     }
 
     SLS.stop = function(obj) {
@@ -171,6 +171,7 @@ if (typeof SLS === "undefined") {
         if(index !== -1) {
             T.songMap[index].Player.stop();
             T.songMap[index].Playing = false;
+            $(obj).next().text('Play');
 
             //GC remove the last played song (we do this because BandJS doesn't handle multi-instancing very well)
             //T.songMap.splice(index, 1);
