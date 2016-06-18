@@ -1,45 +1,43 @@
 
 document.addEventListener('DOMContentLoaded', function() {
-    S.populateFrequencies();
+    T.init();
     //off we go!
     SLS.loadData('c6002016').then(SLS.processData).then(SLS.processTones).catch(function(err){
         alert(err);
     });
 });
 
-if (typeof S === "undefined") {
+/**
+ * Tones namespace
+ */
 
-    var S = {};
+if (typeof T === "undefined") {
 
-    S.bases = [
-        {"Note": "Co", "Frequency":32.7032},
-        {"Note": "Db", "Frequency":34.6478},
-        {"Note": "Do", "Frequency":36.7081},
-        {"Note": "Eb", "Frequency":38.8909},
-        {"Note": "Eo", "Frequency":41.2034},
-        {"Note": "Fo", "Frequency":43.6535},
-        {"Note": "Gb", "Frequency":46.2493},
-        {"Note": "Go", "Frequency":48.9994},
-        {"Note": "Ab", "Frequency":51.9131},
-        {"Note": "Ao", "Frequency":55.0000},
-        {"Note": "Bb", "Frequency":58.2705},
-        {"Note": "Bo", "Frequency":61.7354}
+    var T = {};
 
-    ];
+    T.player = {};
 
-    S.frequencies = [];
+    T.keys = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
-    S.library = {
-        "C1":{"Frequency":{"Start":32.7032},"Volume":{"Master":0.1,"Sustain":0.24,"Decay":0.241,"Punch":0.56,"Attack":0.001},"Generator":{"Func":"synth"}},    };
+    T.toneMap = [];
 
-    S.sfx = {};
+    T.conductor = new BandJS();
 
-    S.populateFrequencies = function() {
-        for(var x = 1; x < 8; x++) {
-            S.bases.forEach(function(frequency, index) {
-                S.frequencies.push(frequency.Frequency * x);
+    T.baseInstrument = {};
+
+    T.init = function() {
+        T.conductor.setTimeSignature(4,4);
+        T.conductor.setTempo(120);
+        T.baseInstrument = T.conductor.createInstrument('square');
+
+        for (var i = 0; i < 9; i++) {
+            T.keys.forEach(function(key, index) {
+                T.toneMap.push(key+i);
             });
         }
+
+        //corner case, add C8
+        T.toneMap.push("C8");
     };
 
 }
@@ -56,6 +54,7 @@ if (typeof SLS === "undefined") {
 
     SLS.teams = {};
     SLS.tones = [];
+    SLS.audio = [];
 
     SLS.loadData = function(dataset) {
         //return the data as a promise so that we're always ensuring that we're getting the dataset before we do anything with it
@@ -76,7 +75,7 @@ if (typeof SLS === "undefined") {
             SLS.teams = data;
             SLS.teams.forEach(function(team, i) {
 
-                //firstly, read all of the positions into an array, so that we can manipulate it easier
+                //read all of the positions into an array, so that we can manipulate it easier
                 var positionArray = [];
                 var toneArray = [];
                 team.positions.forEach(function(position, j) {
@@ -88,15 +87,17 @@ if (typeof SLS === "undefined") {
                 positionArray.forEach(function(set, j) {
                     //ok, so find the distance travelled between each polled point
                     //Ignore if we're on the first point (Can't work out a speed here!)
-                    if(j > 0) {
-                        var currDTF = set.dtf;
-                        var prevDTF = positionArray[j-1].dtf;
-                        var dtfDiff = prevDTF - currDTF;
 
-                        //ok cool, got that, so now we work out the time between polls
-                        var currTime = set.at;
-                        var prevTime = positionArray[j-1].at;
-                        var timeDiff = currTime - prevTime;
+                    var tD = 0;
+                    var pD = 0;
+                    var knots = 0;
+
+                    if(j > 0) {
+                        //get the position delta
+                        pD = (positionArray[j-1].dtf) - (set.dtf);
+
+                        //get the time delta
+                        tD = set.at - positionArray[j-1].at;
 
                         //so that gives us the time elapsed between the previous poll and now (in seconds)
                         //from that, we can work out the speed in knots
@@ -106,17 +107,18 @@ if (typeof SLS === "undefined") {
                         //
                         // dtfDiff / timeDiff = metres per second,  * 3600 = metres per hour, / 1000 = km/h, / 1.852 = knots (!)
 
-                        var metresPerSecond = dtfDiff / timeDiff;
-                        var metresPerHour = metresPerSecond * 3600;
-                        var kmPerHour = metresPerHour / 1000;
-                        var knots = kmPerHour / 1.852;
                         //finally, we want to round to the nearest decimal (to keep things simple)
-                        knots = Math.ceil(knots);
+                        // and normalize the value into a range that is most appropriate to the notes (there are 88 notes, so we add 30)
 
-                        //normalize the value into a range that is most appropriate to the notes (there are 88 notes, so we add 30)
-                        //
-                        knots = knots + 30;
-                        toneArray.push(knots);
+                        knots = Math.ceil((((pD / tD) * 3600) / 1000) / 1.852) + 30;
+
+                        /**
+                         * Might want to change this in the future!
+                         * - for now, remove any instances where speed is 0 (therefore the knots would be "30")
+                         */
+                         if(knots !== 30) {
+                            toneArray.push(knots);
+                         }
                     }
                 });
 
@@ -130,10 +132,29 @@ if (typeof SLS === "undefined") {
     SLS.processTones = function() {
         var team = SLS.tones[0];
         var tones = team.Tones;
+
+        // do the mario intro, because lol
+        T.baseInstrument.note('sixteenth', 'E5, F#4')
+        .note('sixteenth', 'E5, F#4')
+        .rest('sixteenth')
+        .note('sixteenth', 'E5, F#4');
+        T.baseInstrument.rest('sixteenth')
+        .note('sixteenth', 'C5, F#4')
+        .note('sixteenth', 'E5, F#4')
+        .rest('sixteenth');
+        T.baseInstrument.note('sixteenth', 'G5, B4, G4')
+        .rest('sixteenth')
+        .rest('eighth');
+        T.baseInstrument.note('sixteenth', 'G4')
+        .rest('sixteenth')
+        .rest('eighth');
+        ///////
+
         tones.forEach(function(tone, index) {
             //so we have our tone index, now we need to match it up to the right tone
-
             //should be able to generate a tone and play it
+            T.baseInstrument.note('eighth', T.toneMap[tone]);
         });
+        T.player = T.conductor.finish();
     }
 }

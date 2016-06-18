@@ -28,19 +28,6 @@ html, body {
                 float: left;
                 width: 25%;
                 height: 100%;
-
-                &.a {
-                    background-color: @sl-red;
-                }
-                &.b {
-                    background-color: @sl-yellow;
-                }
-                &.c {
-                    background-color: @sl-green;
-                }
-                &.d {
-                    background-color: @sl-blue;
-                }
             }
         }
 
@@ -57,6 +44,29 @@ html, body {
                     line-height: 60px;
                 }
             }
+            > #players {
+                width: 100%;
+                margin: 0;
+                padding: 0;
+
+                > .player {
+                    width: 100%;
+                    height: 60px;
+
+                }
+            }
+        }
+        .bg-red {
+            background-color: @sl-red;
+        }
+        .bg-yellow {
+            background-color: @sl-yellow;
+        }
+        .bg-green {
+            background-color: @sl-green;
+        }
+        .bg-blue {
+            background-color: @sl-blue;
         }
     }
 }

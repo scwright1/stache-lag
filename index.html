@@ -13,10 +13,10 @@
     <body>
         <!-- random little bit of color! -->
         <div id="headerbar">
-            <div class="colorsplash a"></div>
-            <div class="colorsplash b"></div>
-            <div class="colorsplash c"></div>
-            <div class="colorsplash d"></div>
+            <div class="colorsplash bg-red"></div>
+            <div class="colorsplash bg-yellow"></div>
+            <div class="colorsplash bg-green"></div>
+            <div class="colorsplash bg-blue"></div>
         </div>
 
         <!-- on to the main show! -->
@@ -24,11 +24,16 @@
             <div id="controlbar">
                 <div class="title"><b>STACHE-LAG GPS SYNTH</b></div>
             </div>
+            <div id="players">
+            </div>
+            <button onclick="T.player.play()">Start the Madness!</button>
+            <button onclick="T.player.stop()">Stop the Madness!</button>
         </section>
 
         <!-- optimized js load -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+        <script src="js/band.min.js"></script>
         <script src="js/SampleData.js"></script>
         <script src="js/main.js"></script>
-        <script src="js/jsfx.js"></script>
     </body>
 </html>
