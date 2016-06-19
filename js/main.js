@@ -7,7 +7,7 @@ $(document).ready(function() {
     });
 
     //inline functions for operations during use
-    $('.control-handle').tdown(function(e) {
+    $('.control-handle').bind('mousedown touchstart', function(e) {
         e.preventDefault();
 
         //edge condition for touch devices
@@ -21,7 +21,7 @@ $(document).ready(function() {
         T.element = $(this).parent().parent();
         T.startWidth = $(this).parent().width();
 
-        $(document).tmove(function(e) {
+        $(document).bind('mousemove touchmove', function(e) {
 
             var result, scale, offset = 0;
 
@@ -65,10 +65,10 @@ $(document).ready(function() {
 
     });
 
-    $(document).tup(function(e) {
+    $(document).bind('mouseup touchend', function(e) {
         if(T.dragging) {
             //unbind all of the mouse move events
-            $(document).unbind('tmove');
+            //$(document).unbind('tmove');
             $(document).unbind('mousemove');
             $(document).unbind('touchmove');
 
@@ -80,7 +80,7 @@ $(document).ready(function() {
 
 
     //edge case, can't click through the slider text
-    $('.slider-label').tdown(function(e) {
+    $('.slider-label').bind('mousedown touchstart', function(e) {
         e.preventDefault();
     });
 
@@ -311,7 +311,7 @@ if (typeof SLS === "undefined") {
 
 //via http://stackoverflow.com/a/14202543/1711816
 //touch mousedown helper
-(function ($) {
+/*(function ($) {
     $.fn.tdown = function (onclick) {
         this.bind("touchstart", function (e) { onclick.call(this, e); e.stopPropagation(); e.preventDefault(); });
         this.bind("mousedown", function (e) { onclick.call(this, e); });   //substitute mousedown event for exact same result as touchstart
@@ -321,7 +321,7 @@ if (typeof SLS === "undefined") {
 
 (function ($) {
     $.fn.tup = function (onclick) {
-        this.bind("touchstart", function (e) { onclick.call(this, e); e.stopPropagation(); e.preventDefault(); });
+        this.bind("touchend", function (e) { onclick.call(this, e); e.stopPropagation(); e.preventDefault(); });
         this.bind("mouseup", function (e) { onclick.call(this, e); });   //substitute mousedown event for exact same result as touchstart
         return this;
     };
@@ -333,7 +333,7 @@ if (typeof SLS === "undefined") {
         this.bind("touchmove", function (e) { onmove.call(this, e); e.stopPropagation(); e.preventDefault(); });
         this.bind("mousemove", function (e) { onmove.call(this, e); });
     }
-})(jQuery);
+})(jQuery);*/
 
 //math clamp helper function
 function clamp(num, min, max) {
