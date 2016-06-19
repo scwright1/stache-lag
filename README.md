@@ -1,20 +1,18 @@
-#'stache-lag
-###A code challenge. Impress us!
+# Stache-lag GPS Synth
 
-This JS script loads binary data from races tracked by YB Tracking.  The data includes the time, position and distance-to-finish for each team during the race.
+This demo uses GPS data supplied to by `R7` api, and does something a bit silly with it!
 
-We’d love to see if you can add a new dimension to the data.  You might demonstrate a cool new feature that might be incorporated into our race viewer, or something novel just for the fun of it.  We're unlikely to be impressed by a Google Maps mashup, try to show us something we've never thought of.  It doesn't need to be sensible.
+We take the current distance to finish, and the timestamp of each GPS coordinate, and create a speed characteristic from that (straight line speed based on distance to finish).  We then convert that into a speed in knots, and assign it to a musical note!
 
-You’ve all the data you need to calculate speed/direction of the teams, feel free to embellish with additional dummy data if required to make your demo.  Feel free to use any additional libaries/frameworks - we’ll be primarily assessing your ideas and interpretation of the challenge, but we’ll also be looking out for good coding style and structure.  
+The synthesizer generation is being supplied by [Band.js](https://github.com/meenie/band.js/)
 
-We *don't* expect a finished product - but we *do* expect great user experience.  When you're done, upload it to github and send us a link to your project.
+The tool supports multiple simultaneous "songs", tempo changes and volume changes.  It also supports playback on most modern browsers (recent Chrome, Firefox, Edge, Safari), and also includes touch support for mobile devices!
 
-###Usage
+## Known issues
 
-You need to call `R7.load()`, supplying an eventName and some callback functions.
+* Bug with Band.js which causes a javascript error in low-tempo scenarios (recommended tempo is > 100)
 
-You can use these events:
+## Libraries Used
 
-- `c6002016`
-- `arc2015`
-- `fastnet2015`
+* Band.js 1.1.1 (Sound synthesis)
+* jQuery 2.2.4 (DOM manipulation)

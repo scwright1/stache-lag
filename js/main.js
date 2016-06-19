@@ -40,12 +40,25 @@ $(document).ready(function() {
                 result = clamp(Math.round(((percent / 100)*$('#master-controls').width())/scale), 0, 100);
                 T.volume = result;
 
-                //todo - set the volume of each of the playing songs
+                T.songMap.forEach(function(song, index) {
+                    if(T.volume >= 2) {
+                        song.Player.unmute();
+                        song.Conductor.setMasterVolume(T.volume);
+                    } else {
+                        song.Player.mute();
+                    }
+                });
 
             } else if(type === 'tempo') {
-                scale = Math.round($('#master-controls').width() / 320);
-                result = clamp(Math.round(((percent / 100)*$('#master-controls').width())/scale), 0, 320);
+                scale = Math.round($('#master-controls').width() / 300);
+                result = clamp(Math.round(((percent / 100)*$('#master-controls').width())/scale), 30, 300);
                 T.tempo = result;
+
+                //todo - set the tempo of each of the playing songs
+                T.songMap.forEach(function(song, index) {
+                    song.Conductor.setTempo(T.tempo);
+                });
+
             }
             $(T.element).children('.label').children('.label-value').text(result);
         });
@@ -70,8 +83,6 @@ $(document).ready(function() {
     $('.slider-label').tdown(function(e) {
         e.preventDefault();
     });
-
-
 
 
 });
@@ -153,7 +164,8 @@ if (typeof SLS === "undefined") {
                 var playerDiv = $("<div class='player bg-dark-complimentary'></div>");
                 $("#players").append(playerDiv);
                 playerDiv.append("<div class='team-name'>"+team.name+"</div>");
-                playerDiv.append("<div class='player-controls' data-team-id="+i+"><button onclick='SLS.stop(this);'>Stop</button> <button onclick='SLS.play_pause(this);'>Play</button></div>");
+                playerDiv.append("<div class='player-controls' data-team-id="+i+"><div class='stop' onclick='SLS.stop(this);'></div><div onclick='SLS.play_pause(this);' class='play-pause paused'></div></div>");
+                //<button onclick='SLS.stop(this);'>Stop</button>
 
                 //read all of the positions into an array, so that we can manipulate it easier
                 var positionArray = [];
@@ -236,15 +248,15 @@ if (typeof SLS === "undefined") {
             if(T.songMap[index].Playing === true) {
                 T.songMap[index].Player.pause();
                 T.songMap[index].Playing = false;
-                $(obj).text('Play');
+                $(obj).toggleClass('paused');
             } else {
                 T.songMap[index].Player.play();
                 T.songMap[index].Playing = true;
-                $(obj).text('Pause');
+                $(obj).toggleClass('paused');
             }
         } else {
             SLS.processTones(id);
-            $(obj).text('Pause');
+            $(obj).toggleClass('paused');
         }
     }
 
@@ -282,7 +294,7 @@ if (typeof SLS === "undefined") {
         var scalingWidth = masterControls.width();
 
         var volIncrement = Math.round(scalingWidth / 100);
-        var tempoIncrement = Math.round(scalingWidth / 320);
+        var tempoIncrement = Math.round(scalingWidth / 300);
 
         var volPercentage = ((T.volume * volIncrement) / scalingWidth) * 100;
         var tempoPercentage = ((T.tempo * tempoIncrement) / scalingWidth) * 100;

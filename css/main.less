@@ -156,3 +156,86 @@ html, body {
 
 @media screen and (min-width: 600px) {
 }
+
+//utilities
+//// nice play/pause button from https://codepen.io/captainbrosset/pen/WQOLMJ
+.play-pause {
+  /* This must match the background color behind the button */
+  color: lighten(@sl-grey, 5%);
+  /* This is the color of the button */
+  background-color: lighten(@sl-grey, 40%);
+
+  width: 1em; height: 1em;
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+
+  /* Draw the 2 pause bars */
+  background-image: linear-gradient(to right,
+                                    transparent 40%,
+                                    currentColor 40%,
+                                    currentColor 60%,
+                                    transparent 0);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+
+  /* Hide the central part between the 2 bars */
+  transition: background-size .3s;
+
+  margin-top: 22px;
+
+  float: left;
+    &:hover {
+        background-color: @sl-yellow;
+    }
+
+}
+
+.play-pause.paused {
+    background-size: 0 100%;
+    &:hover {
+        background-color: @sl-green;
+    }
+}
+
+.play-pause::before,
+.play-pause::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  background: currentColor;
+  /* Before and after are skewed at 90deg to be invisible */
+  transform: skew(90deg);
+  transform-origin: top left;
+
+  /* And transitioned to the right angle to transform the square into a
+     triangle */
+  transition: transform .3s;
+}
+
+.play-pause::after {
+  transform-origin: bottom left;
+}
+
+.play-pause.paused::before {
+  transform: skew(64deg);
+}
+
+.play-pause.paused::after {
+  transform: skew(117deg);
+}
+
+.stop {
+    float: left;
+    width: 1em;
+    height: 1em;
+    background-color: lighten(@sl-grey, 40%);
+    margin-right: 14px;
+    margin-top: 22px;
+    &:hover {
+        background-color: @sl-red;
+    }
+}
