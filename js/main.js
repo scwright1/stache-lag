@@ -84,6 +84,8 @@ $(document).ready(function() {
         e.preventDefault();
     });
 
+    var tick = setInterval(SLS.updateProgressBars, 1000);
+
 
 });
 
@@ -139,6 +141,7 @@ if (typeof SLS === "undefined") {
     SLS.teams = {};
     SLS.tones = [];
     SLS.audio = [];
+    SLS.progress = [];
 
     SLS.loadData = function(dataset) {
         //return the data as a promise so that we're always ensuring that we're getting the dataset before we do anything with it
@@ -162,7 +165,9 @@ if (typeof SLS === "undefined") {
                 //Append the team as a new div in the players div (for it's player)
                 //pulled in jquery for this, because it's easier to do DOM manipulation with it
                 var playerDiv = $("<div class='player bg-dark-complimentary'></div>");
+                var controlDiv = $("<div class='control'></div>");
                 $("#players").append(playerDiv);
+                playerDiv.append(controlDiv);
                 playerDiv.append("<div class='team-name'>"+team.name+"</div>");
                 playerDiv.append("<div class='player-controls' data-team-id="+i+"><div class='stop' onclick='SLS.stop(this);'></div><div onclick='SLS.play_pause(this);' class='play-pause paused'></div></div>");
                 //<button onclick='SLS.stop(this);'>Stop</button>
@@ -215,6 +220,7 @@ if (typeof SLS === "undefined") {
                 });
 
                 SLS.tones.push({"Team": team.name, "Tones": toneArray});
+                SLS.progress.push({"Team": i, "Control": controlDiv, "Elapsed": 0});
                 resolve();
             });
         });
@@ -228,6 +234,7 @@ if (typeof SLS === "undefined") {
         conductor.setTempo(T.tempo);
         conductor.setTimeSignature(4,4);
         conductor.setMasterVolume(T.volume);
+        conductor.setOnFinishedCallback(SLS.onFinish);
         var song = conductor.createInstrument('sawtooth', 'oscillators');
         SLS.tones[team].Tones.forEach(function(tone, j) {
             //so we have our tone index, now we need to match it up to the right tone
@@ -239,7 +246,7 @@ if (typeof SLS === "undefined") {
         var length = conductor.getTotalSeconds();
         var songRef = T.songMap.push({"Team": team, "Conductor": conductor, "Player": player, "Playing": true}) - 1;
         T.songMap[songRef].Player.play();
-    }
+    };
 
     SLS.play_pause = function(obj) {
         var id = $(obj).parent().data('team-id');
@@ -258,7 +265,7 @@ if (typeof SLS === "undefined") {
             SLS.processTones(id);
             $(obj).toggleClass('paused');
         }
-    }
+    };
 
     SLS.stop = function(obj) {
         var id = $(obj).parent().data('team-id');
@@ -266,14 +273,70 @@ if (typeof SLS === "undefined") {
         if(index !== -1) {
             T.songMap[index].Player.stop();
             T.songMap[index].Playing = false;
-            $(obj).next().text('Play');
+            $(obj).next().toggleClass('paused');
 
-            //GC remove the last played song (we do this because BandJS doesn't handle multi-instancing very well)
-            //T.songMap.splice(index, 1);
+            var pindex = SLS.getArrayIndexForObjWithAttr(SLS.progress, "Team", id);
+            if(pindex !== -1) {
+                $(SLS.progress[pindex].Control).width(0);
+            }
+
         } else {
             //no valid index to stop
         }
+    };
+
+    SLS.onFinish = function() {
+        var _this = this;
+        var index = SLS.getArrayIndexForObjWithAttr(T.songMap, "Conductor", _this);
+        if(index !== -1) {
+            var id = T.songMap[index].Team;
+            T.songMap[index].Playing = false;
+            var player = $('.player-controls').find("[data-team-id='"+id+"']");
+            if(player) {
+                $(player).children().find('.play-pause').addClass('paused');
+            } else {
+            }
+            var pindex = SLS.getArrayIndexForObjWithAttr(SLS.progress, "Team", id);
+            if(pindex !== -1) {
+                $(SLS.progress[pindex].Control).width(0);
+            }
+        }
     }
+
+    SLS.updateProgressBars = function() {
+        T.songMap.forEach(function(team, i) {
+            if(team.Playing === true) {
+                var progressBar, conductor = {};
+                var pindex = SLS.getArrayIndexForObjWithAttr(SLS.progress, "Team", team.Team);
+                var cindex = SLS.getArrayIndexForObjWithAttr(T.songMap, "Team", team.Team);
+                if(pindex !== -1) {
+                    progressBar = SLS.progress[pindex].Control;
+                    if(cindex !== -1) {
+
+                        //get a percentage of the song already completed
+                        var totalTime = T.songMap[cindex].Conductor.getTotalSeconds();
+                        var elapsedTime = SLS.progress[pindex].Elapsed + 1;
+                        var remainingTime = totalTime - elapsedTime;
+
+                        //get the remaining space
+                        var totalWidth = $(progressBar).parent().width();
+                        var elapsedWidth = $(progressBar).width();
+                        var remainingSpace = totalWidth - elapsedWidth;
+
+                        //get the increment size
+                        var increment = remainingSpace / remainingTime;
+
+                        //now set the width
+                        var newWidth = elapsedWidth + increment;
+                        $(progressBar).width(newWidth);
+
+                        //update the elapsed tick
+                        SLS.progress[pindex].Elapsed = elapsedTime;
+                    }
+                }
+            }
+        });
+    };
 
     //helper function, find array index of an object with a particular attribute
     SLS.getArrayIndexForObjWithAttr = function(array, attr, value) {
@@ -283,7 +346,7 @@ if (typeof SLS === "undefined") {
             }
         }
         return -1;
-    }
+    };
 
 
     //helper function, determine starting size for master tempo and master volume sliders
@@ -303,7 +366,7 @@ if (typeof SLS === "undefined") {
         masterControls.children("[data-controller='volume']").find('.label-value').text(T.volume);
         masterControls.children("[data-controller='tempo']").find('.control').width(tempoPercentage+"%");
         masterControls.children("[data-controller='tempo']").find('.label-value').text(T.tempo);
-    }
+    };
 }
 
 //jquery helper functions
