@@ -1,9 +1,79 @@
 $(document).ready(function() {
     T.init();
     //off we go!
+    SLS.setupMasterControlSliders();
     SLS.loadData('c6002016').then(SLS.processData).catch(function(err){
         alert(err);
     });
+
+    //inline functions for operations during use
+    $('.control-handle').tdown(function(e) {
+        e.preventDefault();
+
+        //edge condition for touch devices
+        if(e.pageX) {
+            T.startDragPosition = e.pageX;
+        } else {
+            T.startDragPosition = e.originalEvent.touches[0].pageX;
+        }
+
+        T.dragging = true;
+        T.element = $(this).parent().parent();
+        T.startWidth = $(this).parent().width();
+
+        $(document).tmove(function(e) {
+
+            var result, scale, offset = 0;
+
+            //edge condition for touch devices
+            if(e.pageX) {
+                offset = e.pageX - T.startDragPosition;
+            } else {
+                offset = e.originalEvent.touches[0].pageX - T.startDragPosition;
+            }
+            var type = T.element.data('controller');
+            var width = T.startWidth + offset;
+            var percent = (width / $('#master-controls').width()) * 100;
+            $(T.element).children('.control').width(percent+"%");
+            if(type === 'volume') {
+                scale = Math.round($('#master-controls').width() / 100);
+                result = clamp(Math.round(((percent / 100)*$('#master-controls').width())/scale), 0, 100);
+                T.volume = result;
+
+                //todo - set the volume of each of the playing songs
+
+            } else if(type === 'tempo') {
+                scale = Math.round($('#master-controls').width() / 320);
+                result = clamp(Math.round(((percent / 100)*$('#master-controls').width())/scale), 0, 320);
+                T.tempo = result;
+            }
+            $(T.element).children('.label').children('.label-value').text(result);
+        });
+
+    });
+
+    $(document).tup(function(e) {
+        if(T.dragging) {
+            //unbind all of the mouse move events
+            $(document).unbind('tmove');
+            $(document).unbind('mousemove');
+            $(document).unbind('touchmove');
+
+            //set everything back to idle
+            T.dragging = false;
+            T.element = {};
+        }
+    });
+
+
+    //edge case, can't click through the slider text
+    $('.slider-label').tdown(function(e) {
+        e.preventDefault();
+    });
+
+
+
+
 });
 
 /**
@@ -19,6 +89,18 @@ if (typeof T === "undefined") {
     T.toneMap = [];
 
     T.songMap = [];
+
+    T.volume = 15;
+
+    T.tempo = 160;
+
+    T.dragging = false;
+
+    T.element = {};
+
+    T.startDragPosition = 0;
+
+    T.startWidth = 0;
 
     T.init = function() {
 
@@ -108,7 +190,7 @@ if (typeof SLS === "undefined") {
                         //finally, we want to round to the nearest decimal (to keep things simple)
                         // and normalize the value into a range that is most appropriate to the notes (there are 88 notes, so we add 30)
 
-                        knots = Math.ceil((((pD / tD) * 3600) / 1000) / 1.852) + 30;
+                        knots = Math.round((((pD / tD) * 3600) / 1000) / 1.852) + 30;
 
                         /**
                          * Might want to change this in the future!
@@ -131,9 +213,10 @@ if (typeof SLS === "undefined") {
         //create a new BandJS instance (we do this because we BandJS is pretty poor at handling multi-instances)
         //now, this "song" will be relative to this conductor, so we can start/pause/stop it as we like
         var conductor = new BandJS();
-        conductor.setTempo(120);
+        conductor.setTempo(T.tempo);
         conductor.setTimeSignature(4,4);
-        var song = conductor.createInstrument('square');
+        conductor.setMasterVolume(T.volume);
+        var song = conductor.createInstrument('sawtooth', 'oscillators');
         SLS.tones[team].Tones.forEach(function(tone, j) {
             //so we have our tone index, now we need to match it up to the right tone
             //should be able to generate a tone and play it
@@ -182,11 +265,65 @@ if (typeof SLS === "undefined") {
 
     //helper function, find array index of an object with a particular attribute
     SLS.getArrayIndexForObjWithAttr = function(array, attr, value) {
-    for(var i = 0; i < array.length; i++) {
-        if(array[i].hasOwnProperty(attr) && array[i][attr] === value) {
-            return i;
+        for(var i = 0; i < array.length; i++) {
+            if(array[i].hasOwnProperty(attr) && array[i][attr] === value) {
+                return i;
+            }
         }
+        return -1;
     }
-    return -1;
+
+
+    //helper function, determine starting size for master tempo and master volume sliders
+    SLS.setupMasterControlSliders = function() {
+
+        var masterControls = $('#master-controls');
+
+        var scalingWidth = masterControls.width();
+
+        var volIncrement = Math.round(scalingWidth / 100);
+        var tempoIncrement = Math.round(scalingWidth / 320);
+
+        var volPercentage = ((T.volume * volIncrement) / scalingWidth) * 100;
+        var tempoPercentage = ((T.tempo * tempoIncrement) / scalingWidth) * 100;
+
+        masterControls.children("[data-controller='volume']").find('.control').width(volPercentage+"%");
+        masterControls.children("[data-controller='volume']").find('.label-value').text(T.volume);
+        masterControls.children("[data-controller='tempo']").find('.control').width(tempoPercentage+"%");
+        masterControls.children("[data-controller='tempo']").find('.label-value').text(T.tempo);
+    }
 }
+
+//jquery helper functions
+
+
+//via http://stackoverflow.com/a/14202543/1711816
+//touch mousedown helper
+(function ($) {
+    $.fn.tdown = function (onclick) {
+        this.bind("touchstart", function (e) { onclick.call(this, e); e.stopPropagation(); e.preventDefault(); });
+        this.bind("mousedown", function (e) { onclick.call(this, e); });   //substitute mousedown event for exact same result as touchstart
+        return this;
+    };
+})(jQuery);
+
+(function ($) {
+    $.fn.tup = function (onclick) {
+        this.bind("touchstart", function (e) { onclick.call(this, e); e.stopPropagation(); e.preventDefault(); });
+        this.bind("mouseup", function (e) { onclick.call(this, e); });   //substitute mousedown event for exact same result as touchstart
+        return this;
+    };
+})(jQuery);
+
+//touch move helper
+(function ($) {
+    $.fn.tmove = function(onmove) {
+        this.bind("touchmove", function (e) { onmove.call(this, e); e.stopPropagation(); e.preventDefault(); });
+        this.bind("mousemove", function (e) { onmove.call(this, e); });
+    }
+})(jQuery);
+
+//math clamp helper function
+function clamp(num, min, max) {
+  return num < min ? min : num > max ? max : num;
 }

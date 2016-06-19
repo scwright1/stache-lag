@@ -34,21 +34,28 @@ html, body {
         > #content {
             > #controlbar {
                 width: 100%;
-                height: 80px;
+                height: 90px;
                 > .title {
                     font-family: "Source Sans Pro", sans-serif;
                     float: left;
-                    width: 60%;
-                    height: 60px;
+                    width: 50%;
+                    height: 70px;
                     margin: 10px;
-                    line-height: 60px;
+                    line-height: 70px;
                     font-weight: 200;
+                    font-size: 28px;
                 }
             }
             > #players {
                 width: 100%;
                 margin: 0;
                 padding: 0;
+                position: fixed;
+                top: 100px;
+                bottom: 120px;
+                left: 0;
+                right: 0;
+                overflow: auto;
 
                 > .player {
                     width: 100%;
@@ -72,21 +79,80 @@ html, body {
                     }
                 }
             }
+            > #master-controls {
+                width: 100%;
+                height: 120px;
+                bottom: 0;
+                position: fixed;
+                left: 0;
+                right: 0;
+
+                > .control-box {
+                    width: 100%;
+                    height: 52px;
+                    margin: 4px;
+                    line-height: 52px;
+                    > .label {
+                        float: right;
+                        z-index: 11;
+                        margin-right: 20px;
+                        color: darken(@sl-grey, 50%);
+                        font-weight: 300;
+                        font-size: 22px;
+                        position: absolute;
+                        right: 0;
+                        pointer-events: none;
+                        > .label-text {
+                            float: left;
+                            margin-right: 4px;
+                        }
+                        > .label-value {
+                            float: left;
+                        }
+                    }
+                    > .control {
+                        height: 100%;
+                        float: left;
+                        z-index: 10;
+
+                        > .control-handle {
+                            height: 100%;
+                            width: 20px;
+                            float: right;
+                        }
+                    }
+                }
+            }
         }
         .bg-red {
             background-color: @sl-red;
         }
+        .bg-red-complimentary {
+            background-color: darken(@sl-red, 15%);
+        }
         .bg-yellow {
             background-color: @sl-yellow;
+        }
+        .bg-yellow-complimentary {
+            background-color: darken(@sl-yellow, 15%);
         }
         .bg-green {
             background-color: @sl-green;
         }
+        .bg-green-complimentary {
+            background-color: darken(@sl-green, 15%);
+        }
         .bg-blue {
             background-color: @sl-blue;
+        }
+        .bg-blue-complimentary {
+            background-color: darken(@sl-blue, 15%);
         }
         .bg-dark-complimentary {
             background-color: lighten(@sl-grey, 5%);
         }
     }
+}
+
+@media screen and (min-width: 600px) {
 }
