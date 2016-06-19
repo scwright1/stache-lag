@@ -1,0 +1,241 @@
+@sl-red: #f38181;
+@sl-yellow: #fce38a;
+@sl-green: #eaffd0;
+@sl-blue: #95e1d3;
+@sl-grey: #393e46;
+@sl-white: #f5f5f5;
+
+
+
+html, body {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: @sl-grey;
+    font-family: "Source Sans Pro", sans-serif;
+    color: @sl-white;
+}
+
+@media screen and (min-width: 320px) {
+    body {
+        > #headerbar {
+            width: 100%;
+            height: 10px;
+            margin: 0;
+            padding: 0;
+
+            > .colorsplash {
+                float: left;
+                width: 25%;
+                height: 100%;
+            }
+        }
+
+        > #content {
+            > #controlbar {
+                width: 100%;
+                height: 90px;
+                > .title {
+                    font-family: "Source Sans Pro", sans-serif;
+                    float: left;
+                    width: 50%;
+                    height: 70px;
+                    margin: 10px;
+                    line-height: 70px;
+                    font-weight: 200;
+                    font-size: 28px;
+                }
+            }
+            > #players {
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                position: fixed;
+                top: 100px;
+                bottom: 120px;
+                left: 0;
+                right: 0;
+                overflow: auto;
+
+                > .player {
+                    width: 100%;
+                    height: 59px;
+                    margin-bottom: 1px;
+
+                    > .team-name {
+                        line-height: 59px;
+                        font-size: 18px;
+                        margin-left: 20px;
+                        float: left;
+                        color: @sl-white;
+                        font-weight: 200;
+                    }
+
+                    > .player-controls {
+                        float: right;
+                        height: 100%;
+                        line-height: 59px;
+                        margin-right: 20px;
+                    }
+                }
+            }
+            > #master-controls {
+                width: 100%;
+                height: 120px;
+                bottom: 0;
+                position: fixed;
+                left: 0;
+                right: 0;
+
+                > .control-box {
+                    width: 100%;
+                    height: 52px;
+                    margin: 4px;
+                    line-height: 52px;
+                    > .label {
+                        float: right;
+                        z-index: 11;
+                        margin-right: 20px;
+                        color: darken(@sl-grey, 50%);
+                        font-weight: 300;
+                        font-size: 22px;
+                        position: absolute;
+                        right: 0;
+                        pointer-events: none;
+                        > .label-text {
+                            float: left;
+                            margin-right: 4px;
+                        }
+                        > .label-value {
+                            float: left;
+                        }
+                    }
+                    > .control {
+                        height: 100%;
+                        float: left;
+                        z-index: 10;
+
+                        > .control-handle {
+                            height: 100%;
+                            width: 20px;
+                            float: right;
+                        }
+                    }
+                }
+            }
+        }
+        .bg-red {
+            background-color: @sl-red;
+        }
+        .bg-red-complimentary {
+            background-color: darken(@sl-red, 15%);
+        }
+        .bg-yellow {
+            background-color: @sl-yellow;
+        }
+        .bg-yellow-complimentary {
+            background-color: darken(@sl-yellow, 15%);
+        }
+        .bg-green {
+            background-color: @sl-green;
+        }
+        .bg-green-complimentary {
+            background-color: darken(@sl-green, 15%);
+        }
+        .bg-blue {
+            background-color: @sl-blue;
+        }
+        .bg-blue-complimentary {
+            background-color: darken(@sl-blue, 15%);
+        }
+        .bg-dark-complimentary {
+            background-color: lighten(@sl-grey, 5%);
+        }
+    }
+}
+
+@media screen and (min-width: 600px) {
+}
+
+//utilities
+//// nice play/pause button from https://codepen.io/captainbrosset/pen/WQOLMJ
+.play-pause {
+  /* This must match the background color behind the button */
+  color: lighten(@sl-grey, 5%);
+  /* This is the color of the button */
+  background-color: lighten(@sl-grey, 40%);
+
+  width: 1em; height: 1em;
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+
+  /* Draw the 2 pause bars */
+  background-image: linear-gradient(to right,
+                                    transparent 40%,
+                                    currentColor 40%,
+                                    currentColor 60%,
+                                    transparent 0);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+
+  /* Hide the central part between the 2 bars */
+  transition: background-size .3s;
+
+  margin-top: 22px;
+
+  float: left;
+    &:hover {
+        background-color: @sl-yellow;
+    }
+
+}
+
+.play-pause.paused {
+    background-size: 0 100%;
+    &:hover {
+        background-color: @sl-green;
+    }
+}
+
+.play-pause::before,
+.play-pause::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  background: currentColor;
+  /* Before and after are skewed at 90deg to be invisible */
+  transform: skew(90deg);
+  transform-origin: top left;
+
+  /* And transitioned to the right angle to transform the square into a
+     triangle */
+  transition: transform .3s;
+}
+
+.play-pause::after {
+  transform-origin: bottom left;
+}
+
+.play-pause.paused::before {
+  transform: skew(64deg);
+}
+
+.play-pause.paused::after {
+  transform: skew(117deg);
+}
+
+.stop {
+    float: left;
+    width: 1em;
+    height: 1em;
+    background-color: lighten(@sl-grey, 40%);
+    margin-right: 14px;
+    margin-top: 22px;
+    &:hover {
+        background-color: @sl-red;
+    }
+}

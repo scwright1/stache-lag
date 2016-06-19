@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang=en>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE-edge">
+        <title>Stache-Lag</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+        <link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300,200" rel="stylesheet">
+    </head>
+    <body>
+        <!-- random little bit of color! -->
+        <div id="headerbar">
+            <div class="colorsplash bg-red"></div>
+            <div class="colorsplash bg-yellow"></div>
+            <div class="colorsplash bg-green"></div>
+            <div class="colorsplash bg-blue"></div>
+        </div>
+
+        <!-- on to the main show! -->
+        <section id="content">
+            <div id="controlbar">
+                <div class="title">GPS SYNTH!</div>
+            </div>
+            <div id="players">
+            </div>
+            <div id="master-controls">
+                <div class="control-box" data-controller="volume">
+                    <div class="control bg-green">
+                        <div class="control-handle bg-green-complimentary"></div>
+                    </div>
+                    <div class="label">
+                        <div class="label-text">MASTER VOLUME</div>
+                        <div class="label-value"></div>
+                    </div>
+                </div>
+                <div class="control-box" data-controller="tempo">
+                    <div class="control bg-blue">
+                        <div class="control-handle bg-blue-complimentary"></div>
+                    </div>
+                    <div class="label">
+                        <div class="label-text">MASTER TEMPO</div>
+                        <div class="label-value"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- optimized js load -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+        <script src="js/band.min.js"></script>
+        <script src="js/SampleData.js"></script>
+        <script src="js/main.js"></script>
+    </body>
+</html>
