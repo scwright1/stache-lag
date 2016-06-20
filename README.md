@@ -17,7 +17,7 @@ There is a live version here: [https://stephencwright.co.uk/stache-lag](https://
 ## Known Issues
 
 * Band.js creates a new AudioContext object every time you create a new conductor(!), so i've modified js/band.js to create a single globalAudioContext
-* Bug with Band.js which causes a javascript error in low-tempo scenarios (recommended tempo is > 100)
+* Bug with Band.js which causes a javascript error if you decrease the tempo too fast (try not to do it more than a few BPM every second)
 * Bug with Band.js which incorrectly reports remaining time in high-tempo scenarios
 * It is possible to swipe the Tempo and Volume controls below Min, and above Max, making it impossible to get them back :-()
 
