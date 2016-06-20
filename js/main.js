@@ -1,134 +1,28 @@
 $(document).ready(function() {
-    T.init();
+
     //off we go!
+    T.init();
+
     SLS.setupMasterControlSliders();
+
+    //do the initial data loads, then process the data into the tone database
     SLS.loadData(SLS.race).then(SLS.processData).catch(function(err){
+
         alert(err);
-    });
-
-    //inline functions for operations during use
-    $('.control-handle').bind('mousedown touchstart', function(e) {
-        e.preventDefault();
-
-        //edge condition for touch devices
-        if(e.pageX) {
-            T.startDragPosition = e.pageX;
-        } else {
-            T.startDragPosition = e.originalEvent.touches[0].pageX;
-        }
-
-        T.dragging = true;
-        T.element = $(this).parent().parent();
-        T.startWidth = $(this).parent().width();
-
-        $(document).bind('mousemove touchmove', function(e) {
-
-            var result, scale, offset = 0;
-
-            //edge condition for touch devices
-            if(e.pageX) {
-                offset = e.pageX - T.startDragPosition;
-            } else {
-                offset = e.originalEvent.touches[0].pageX - T.startDragPosition;
-            }
-            var type = T.element.data('controller');
-            var width = T.startWidth + offset;
-            var percent = (width / $('#master-controls').width()) * 100;
-            $(T.element).children('.control').width(percent+"%");
-            if(type === 'volume') {
-                scale = Math.round($('#master-controls').width() / 100);
-                result = Util.clamp(Math.round(((percent / 100)*$('#master-controls').width())/scale), 0, 100);
-                T.volume = result;
-
-                T.songMap.forEach(function(song, index) {
-                    if(T.volume >= 2) {
-                        song.Player.unmute();
-                        song.Conductor.setMasterVolume(T.volume);
-                    } else {
-                        song.Player.mute();
-                    }
-                });
-
-            } else if(type === 'tempo') {
-                scale = Math.round($('#master-controls').width() / 300);
-                result = Util.clamp(Math.round(((percent / 100)*$('#master-controls').width())/scale), 30, 300);
-                T.tempo = result;
-
-                T.songMap.forEach(function(song, index) {
-                    song.Conductor.setTempo(T.tempo);
-                });
-
-            }
-            $(T.element).children('.label').children('.label-value').text(result);
-        });
 
     });
 
-    $(document).bind('mouseup touchend', function(e) {
-        if(T.dragging) {
-            //unbind all of the mouse move events
-            //$(document).unbind('tmove');
-            $(document).unbind('mousemove');
-            $(document).unbind('touchmove');
+    //set up our mouse and touch bindings
+    SLS.setupBindings();
 
-            //set everything back to idle
-            T.dragging = false;
-            T.element = {};
-        }
-    });
-
-
-    //edge case, can't click through the slider text
-    $('.slider-label').bind('mousedown touchstart', function(e) {
-        e.preventDefault();
-    });
-
+    //set up our select listener
     SLS.groupSelectTrigger();
-
 
 });
 
 /**
- * Tones namespace
- */
-
-if (typeof T === "undefined") {
-
-    var T = {};
-
-    T.keys = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-
-    T.toneMap = [];
-
-    T.songMap = [];
-
-    T.volume = 15;
-
-    T.tempo = 140;
-
-    T.dragging = false;
-
-    T.element = {};
-
-    T.startDragPosition = 0;
-
-    T.startWidth = 0;
-
-    T.init = function() {
-        for (var i = 0; i < 8; i++) {
-            T.keys.forEach(function(key, index) {
-                T.toneMap.push(key+i);
-            });
-        }
-
-        //corner case, add C8
-        T.toneMap.push("C8");
-    };
-
-}
-
-/**
  * SLS namespace
+ * most of the functional logic is in here (groups, divs etc)
  */
 
 if (typeof SLS === "undefined") {
@@ -149,21 +43,33 @@ if (typeof SLS === "undefined") {
 
     SLS.progress = [];
 
+    //load the race data from the R7 api, and return a promise
     SLS.loadData = function(dataset) {
+
         //return the data as a promise so that we're always ensuring that we're getting the dataset before we do anything with it
-        var loadFromR7 = new Promise(function(resolve, reject) {
+        return loadFromR7 = new Promise(function(resolve, reject) {
+
             if(dataset !== "") {
+
                 R7.load(dataset, function(data) {
+
                     $('.race-name').text(SLS.race);
+
                     resolve(data);
+
                 }, function() {
+
                     reject("Failed to load Dataset \""+dataset+"\"");
+
                 });
+
             }
+
         });
-        return loadFromR7;
+
     };
 
+    //Generate player divs for the currently active group
     SLS.generatePlayers = function(group) {
 
         //determina all songs that are applicable for this group
@@ -193,6 +99,7 @@ if (typeof SLS === "undefined") {
 
     };
 
+    //set up the binding for the onchange of the group select
     SLS.groupSelectTrigger = function() {
 
         var select = $('#group-select');
@@ -223,8 +130,129 @@ if (typeof SLS === "undefined") {
 
         });
 
-    }
+    };
 
+    //set up the mouse and touch bindings
+    SLS.setupBindings = function() {
+        //functions for operations during use
+        $('.control-handle').bind('mousedown touchstart', function(e) {
+
+            e.preventDefault();
+
+            //edge condition for touch devices
+            if(e.pageX) {
+
+                T.startDragPosition = e.pageX;
+
+            } else {
+
+                T.startDragPosition = e.originalEvent.touches[0].pageX;
+
+            }
+
+            T.dragging = true;
+
+            T.element = $(this).parent().parent();
+
+            T.startWidth = $(this).parent().width();
+
+            $(document).bind('mousemove touchmove', function(e) {
+
+                var result, scale, offset = 0;
+
+                //edge condition for touch devices
+                if(e.pageX) {
+
+                    offset = e.pageX - T.startDragPosition;
+
+                } else {
+
+                    offset = e.originalEvent.touches[0].pageX - T.startDragPosition;
+
+                }
+
+                var type = T.element.data('controller');
+
+                var width = T.startWidth + offset;
+
+                var percent = (width / $('#master-controls').width()) * 100;
+
+                $(T.element).children('.control').width(percent+"%");
+
+                if(type === 'volume') {
+
+                    scale = Math.round($('#master-controls').width() / 100);
+
+                    result = Util.clamp(Math.round(((percent / 100)*$('#master-controls').width())/scale), 0, 100);
+
+                    T.volume = result;
+
+                    T.songMap.forEach(function(song, index) {
+
+                        if(T.volume >= 2) {
+
+                            song.Player.unmute();
+
+                            song.Conductor.setMasterVolume(T.volume);
+
+                        } else {
+
+                            song.Player.mute();
+
+                        }
+
+                    });
+
+                } else if(type === 'tempo') {
+
+                    scale = Math.round($('#master-controls').width() / 300);
+
+                    result = Util.clamp(Math.round(((percent / 100)*$('#master-controls').width())/scale), 30, 300);
+
+                    T.tempo = result;
+
+                    T.songMap.forEach(function(song, index) {
+
+                        song.Conductor.setTempo(T.tempo);
+
+                    });
+
+                }
+
+                $(T.element).children('.label').children('.label-value').text(result);
+
+            });
+
+        });
+
+        $(document).bind('mouseup touchend', function(e) {
+
+            if(T.dragging) {
+
+                //unbind all of the mouse move events
+                $(document).unbind('mousemove');
+
+                $(document).unbind('touchmove');
+
+                //set everything back to idle
+                T.dragging = false;
+
+                T.element = {};
+            }
+
+        });
+
+
+        //edge case, can't click through the slider text
+        $('.slider-label').bind('mousedown touchstart', function(e) {
+
+            e.preventDefault();
+
+        });
+
+    };
+
+    //process the race data, turn the data into a tone index that can be referenced as a musical scale
     SLS.processData = function(data) {
 
         var processed = new Promise(function(resolve, reject) {
@@ -233,6 +261,7 @@ if (typeof SLS === "undefined") {
 
             SLS.groups = Math.ceil(data.length / 6);
 
+            //populate the select element with the number of groups (of 6, due to AudioContext limits)
             for (var group = 1; group <= SLS.groups; group++) {
 
                 var option = $('#group-select').append('<option>'+group+'</option>');
@@ -257,16 +286,14 @@ if (typeof SLS === "undefined") {
                     positionArray.push(position);
 
                 });
-                //reverse the array so that we work from start to finish, not finish to start
 
+                //reverse the array so that we work from start to finish, not finish to start
                 positionArray.reverse();
 
                 //now if we loop through it, we should end up with the higher dtf first
-
                 positionArray.forEach(function(set, j) {
 
                     //ok, so find the distance travelled between each polled point
-
                     //Ignore if we're on the first point (Can't work out a speed here!)
 
                     var tD = 0;
@@ -333,64 +360,114 @@ if (typeof SLS === "undefined") {
 
     };
 
+    //for the team that wants it's "song" played, process the tones and create the song
     SLS.processTones = function(team) {
+
         //create a new BandJS instance (we do this because we BandJS is pretty poor at handling multi-instances)
+
         //now, this "song" will be relative to this conductor, so we can start/pause/stop it as we like
+
         var conductor = new BandJS();
+
         conductor.setTempo(T.tempo);
+
         conductor.setTimeSignature(4,4);
+
         conductor.setMasterVolume(T.volume);
+
         conductor.setOnFinishedCallback(SLS.onFinish);
+
         conductor.setTickerCallback(SLS.onTick);
+
         var song = conductor.createInstrument('sawtooth', 'oscillators');
+
         SLS.tones[team].Tones.forEach(function(tone, j) {
+
             //so we have our tone index, now we need to match it up to the right tone
+
             //should be able to generate a tone and play it
+
             song.note('eighth', T.toneMap[tone]);
+
         });
 
         var player = conductor.finish();
+
         var length = conductor.getTotalSeconds();
+
         var songRef = T.songMap.push({"Team": team, "Conductor": conductor, "Player": player, "Playing": true}) - 1;
+
         T.songMap[songRef].Player.play();
+
     };
 
+    //process a play or pause action against a particular song
     SLS.play_pause = function(obj) {
+
         var id = $(obj).parent().data('team-id');
+
         var index = Util.getArrayIndexForObjWithAttr(T.songMap, "Team", id);
+
         if(index !== -1) {
             if(T.songMap[index].Playing === true) {
+
                 T.songMap[index].Player.pause();
+
                 T.songMap[index].Playing = false;
+
                 $(obj).toggleClass('paused');
+
             } else {
+
                 T.songMap[index].Player.play();
+
                 T.songMap[index].Playing = true;
+
                 $(obj).toggleClass('paused');
+
             }
+
         } else {
+
             SLS.processTones(id);
+
             $(obj).toggleClass('paused');
+
         }
+
     };
 
+    //process a stop action against a particular song
     SLS.stop = function(obj) {
+
         var id = $(obj).parent().data('team-id');
+
         var index = Util.getArrayIndexForObjWithAttr(T.songMap, "Team", id);
+
         if(index !== -1) {
+
             T.songMap[index].Player.stop();
+
             T.songMap[index].Playing = false;
+
             $(obj).next().addClass('paused');
 
             var pindex = Util.getArrayIndexForObjWithAttr(SLS.progress, "Team", id);
+
             if(pindex !== -1) {
+
                 $(SLS.progress[pindex].Control).width(0);
+
                 $(SLS.progress[pindex].Control).data().elapsed = 0;
+
             }
 
         } else {
+
             //no valid index to stop
+
         }
+
     };
 
 
@@ -398,43 +475,76 @@ if (typeof SLS === "undefined") {
     *   callback function for BandJS's setOnFinishedCallback.  Resets all values for the current instance
     **/
     SLS.onFinish = function() {
+
         var _this = this;
+
         var index = Util.getArrayIndexForObjWithAttr(T.songMap, "Conductor", _this);
+
         if(index !== -1) {
+
             var id = T.songMap[index].Team;
+
             var player = $('.player-controls[data-team-id="'+id+'"]');
+
             T.songMap[index].Playing = false;
+
             $(player).find('.play-pause').addClass('paused');
+
             var pindex = Util.getArrayIndexForObjWithAttr(SLS.progress, "Team", id);
+
             if(pindex !== -1) {
+
                 $(SLS.progress[pindex].Control).width(0);
+
                 $(SLS.progress[pindex].Control).data().elapsed = 0;
+
             }
+
         }
+
     };
 
     /**
     *   callback function for BandJS's onTickerCallback.  Updates progress bar and elapsed time count for the current instance
     **/
     SLS.onTick = function() {
+
         var b = {};
+
         var complete = 0;
+
         var _this = this;
+
         var length = _this.getTotalSeconds();
+
         var index = Util.getArrayIndexForObjWithAttr(T.songMap, "Conductor", _this);
+
         if(index !== -1) {
+
             //only update if the song is currently playing
+
             //this fixes the edge case where we press the stop button and the tick function fires again
+
             if(T.songMap[index].Playing) {
+
                 var tid = T.songMap[index].Team;
+
                 var tindex = Util.getArrayIndexForObjWithAttr(SLS.progress, "Team", tid);
+
                 b = SLS.progress[tindex].Control;
+
                 $(b).data().elapsed++;
+
                 //song completion as a percentage
+
                 complete = ($(b).data().elapsed / length) * 100;
+
                 $(b).width(complete+"%");
+
             }
+
         }
+
     };
 
     //helper function, determine starting size for master tempo and master volume sliders
@@ -445,39 +555,100 @@ if (typeof SLS === "undefined") {
         var scalingWidth = masterControls.width();
 
         var volIncrement = Math.round(scalingWidth / 100);
+
         var tempoIncrement = Math.round(scalingWidth / 300);
 
         var volPercentage = ((T.volume * volIncrement) / scalingWidth) * 100;
+
         var tempoPercentage = ((T.tempo * tempoIncrement) / scalingWidth) * 100;
 
         masterControls.children("[data-controller='volume']").find('.control').width(volPercentage+"%");
+
         masterControls.children("[data-controller='volume']").find('.label-value').text(T.volume);
+
         masterControls.children("[data-controller='tempo']").find('.control').width(tempoPercentage+"%");
+
         masterControls.children("[data-controller='tempo']").find('.label-value').text(T.tempo);
+
     };
+
+}
+
+/**
+ * Tones namespace
+ */
+if (typeof T === "undefined") {
+
+    var T = {};
+
+    T.keys = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+
+    T.toneMap = [];
+
+    T.songMap = [];
+
+    T.volume = 15;
+
+    T.tempo = 140;
+
+    T.dragging = false;
+
+    T.element = {};
+
+    T.startDragPosition = 0;
+
+    T.startWidth = 0;
+
+    T.init = function() {
+
+        //create the full scale of notes in an array (should be 12 * 7 + 1)
+        for (var i = 0; i < 8; i++) {
+
+            T.keys.forEach(function(key, index) {
+
+                T.toneMap.push(key+i);
+
+            });
+
+        }
+
+        //corner case, add C8
+        T.toneMap.push("C8");
+    };
+
 }
 
 
 
-//Utilities namespace
-//
+/**
+ * Utilities Namespace
+ */
 if (typeof Util === "undefined") {
 
     var Util = {};
 
     //clamp value between upper and lower limit
     Util.clamp = function(num, min, max) {
+
         return num < min ? min : num > max ? max : num;
+
     };
 
     //find array index of an object with a particular attribute
     Util.getArrayIndexForObjWithAttr = function(array, attr, value) {
+
         for(var i = 0; i < array.length; i++) {
+
             if(array[i].hasOwnProperty(attr) && array[i][attr] === value) {
+
                 return i;
+
             }
+
         }
+
         return -1;
+
     };
 
 }
