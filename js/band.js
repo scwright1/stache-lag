@@ -26,7 +26,7 @@ var packs = {
     tuning: {}
 };
 
-var globalAudioContext = new AudioContext();
+var globalAudioContext = new(window.AudioContext || window.webkitAudioContext);
 
 /**
  * Conductor Class - This gets instantiated when `new BandJS()` is called
