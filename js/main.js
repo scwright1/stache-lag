@@ -279,6 +279,8 @@ if (typeof SLS === "undefined") {
             var pindex = Util.getArrayIndexForObjWithAttr(SLS.progress, "Team", id);
             if(pindex !== -1) {
                 $(SLS.progress[pindex].Control).width(0);
+                $(SLS.progress[pindex].Control).data().elapsed = 0;
+                console.log('tock');
             }
 
         } else {
@@ -318,11 +320,14 @@ if (typeof SLS === "undefined") {
         var length = _this.getTotalSeconds();
         var index = Util.getArrayIndexForObjWithAttr(T.songMap, "Conductor", _this);
         if(index !== -1) {
-            b = SLS.progress[T.songMap[index].Team].Control;
-            $(b).data().elapsed++;
-            //song completion as a percentage
-            complete = ($(b).data().elapsed / length) * 100;
-            $(b).width(complete+"%");
+            if(T.songMap[index].Playing) {
+                console.log('tick');
+                b = SLS.progress[T.songMap[index].Team].Control;
+                $(b).data().elapsed++;
+                //song completion as a percentage
+                complete = ($(b).data().elapsed / length) * 100;
+                $(b).width(complete+"%");
+            }
         }
     };
 
