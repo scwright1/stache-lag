@@ -2,7 +2,7 @@ $(document).ready(function() {
     T.init();
     //off we go!
     SLS.setupMasterControlSliders();
-    SLS.loadData('c6002016').then(SLS.processData).catch(function(err){
+    SLS.loadData(SLS.race).then(SLS.processData).catch(function(err){
         alert(err);
     });
 
@@ -83,6 +83,8 @@ $(document).ready(function() {
         e.preventDefault();
     });
 
+    SLS.groupSelectTrigger();
+
 
 });
 
@@ -133,7 +135,13 @@ if (typeof SLS === "undefined") {
 
     var SLS = {};
 
+    SLS.race = "c6002016";
+
     SLS.teams = {};
+
+    SLS.groups = 0;
+
+    SLS.currentGroup = 1;
 
     SLS.tones = [];
 
@@ -146,6 +154,7 @@ if (typeof SLS === "undefined") {
         var loadFromR7 = new Promise(function(resolve, reject) {
             if(dataset !== "") {
                 R7.load(dataset, function(data) {
+                    $('.race-name').text(SLS.race);
                     resolve(data);
                 }, function() {
                     reject("Failed to load Dataset \""+dataset+"\"");
@@ -155,54 +164,139 @@ if (typeof SLS === "undefined") {
         return loadFromR7;
     };
 
-    SLS.processData = function(data) {
-        var processed = new Promise(function(resolve, reject) {
-            SLS.teams = data;
-            SLS.teams.forEach(function(team, i) {
+    SLS.generatePlayers = function(group) {
 
-                //Append the team as a new div in the players div (for it's player)
-                //pulled in jquery for this, because it's easier to do DOM manipulation with it
+        //determina all songs that are applicable for this group
+        var entry = (6 * group) - 6;
+
+        for (entry; entry < (6 * group); entry++) {
+
+            if (entry < SLS.teams.length) {
+
                 var playerDiv = $("<div class='player bg-dark-complimentary'></div>");
+
                 var controlDiv = $("<div class='control' data-elapsed='0'></div>");
+
                 $("#players").append(playerDiv);
+
                 playerDiv.append(controlDiv);
-                playerDiv.append("<div class='team-name'>"+team.name+"</div>");
-                playerDiv.append("<div class='player-controls' data-team-id="+i+"><div class='stop' onclick='SLS.stop(this);'></div><div onclick='SLS.play_pause(this);' class='play-pause paused'></div></div>");
-                //<button onclick='SLS.stop(this);'>Stop</button>
+
+                playerDiv.append("<div class='team-name'>"+SLS.teams[entry].name+"</div>");
+
+                playerDiv.append("<div class='player-controls' data-team-id="+entry+"><div class='stop' onclick='SLS.stop(this);'></div><div onclick='SLS.play_pause(this);' class='play-pause paused'></div></div>");
+
+                SLS.progress.push({"Team": entry, "Control": controlDiv});
+
+            }
+
+        }
+
+    };
+
+    SLS.groupSelectTrigger = function() {
+
+        var select = $('#group-select');
+
+        $(select).change(function() {
+
+            SLS.currentGroup = $(select).find(':selected').text();
+
+            //kill all playing songs and remove everything from the array
+
+            T.songMap.forEach(function(song, index) {
+
+                if(song.Playing === true) {
+
+                    song.Player.stop();
+
+                }
+
+            });
+
+            T.songMap.length = 0;
+
+            SLS.progress.length = 0;
+
+            $('#players').empty();
+
+            SLS.generatePlayers(SLS.currentGroup);
+
+        });
+
+    }
+
+    SLS.processData = function(data) {
+
+        var processed = new Promise(function(resolve, reject) {
+
+            SLS.teams = data;
+
+            SLS.groups = Math.ceil(data.length / 6);
+
+            for (var group = 1; group <= SLS.groups; group++) {
+
+                var option = $('#group-select').append('<option>'+group+'</option>');
+
+                if (group === 1) {
+
+                    $(option).attr('selected', 'selected');
+
+                }
+
+            }
+
+            SLS.teams.forEach(function(team, i) {
 
                 //read all of the positions into an array, so that we can manipulate it easier
                 var positionArray = [];
+
                 var toneArray = [];
+
                 team.positions.forEach(function(position, j) {
+
                     positionArray.push(position);
+
                 });
                 //reverse the array so that we work from start to finish, not finish to start
+
                 positionArray.reverse();
+
                 //now if we loop through it, we should end up with the higher dtf first
+
                 positionArray.forEach(function(set, j) {
+
                     //ok, so find the distance travelled between each polled point
+
                     //Ignore if we're on the first point (Can't work out a speed here!)
 
                     var tD = 0;
+
                     var pD = 0;
+
                     var knots = 0;
 
                     if(j > 0) {
+
                         //get the position delta
+
                         pD = (positionArray[j-1].dtf) - (set.dtf);
 
                         //get the time delta
+
                         tD = set.at - positionArray[j-1].at;
 
                         //so that gives us the time elapsed between the previous poll and now (in seconds)
+
                         //from that, we can work out the speed in knots
+
                         //1 knot = 1.852km/h
-                        //
+
                         //so if we travel dtfDiff metres in timeDiff seconds, that means:
-                        //
+
                         // dtfDiff / timeDiff = metres per second,  * 3600 = metres per hour, / 1000 = km/h, / 1.852 = knots (!)
 
                         //finally, we want to round to the nearest decimal (to keep things simple)
+
                         // and normalize the value into a range that is most appropriate to the notes (there are 88 notes, so we add 30)
 
                         knots = Math.round((((pD / tD) * 3600) / 1000) / 1.852) + 30;
@@ -212,19 +306,31 @@ if (typeof SLS === "undefined") {
                          * - for now, remove any instances where speed is 0 (therefore the knots would be "30")
                          * also make sure that we don't include any notes that are outside of the available range
                          */
+
                          knots = Util.clamp(knots, 0, 95);
+
                          if(knots !== 30) {
+
                             toneArray.push(knots);
+
                          }
+
                     }
+
                 });
 
                 SLS.tones.push({"Team": team.name, "Tones": toneArray});
-                SLS.progress.push({"Team": i, "Control": controlDiv});
+
                 resolve();
+
             });
+
+            SLS.generatePlayers(SLS.currentGroup);
+
         });
+
         return processed;
+
     };
 
     SLS.processTones = function(team) {
@@ -320,7 +426,9 @@ if (typeof SLS === "undefined") {
             //only update if the song is currently playing
             //this fixes the edge case where we press the stop button and the tick function fires again
             if(T.songMap[index].Playing) {
-                b = SLS.progress[T.songMap[index].Team].Control;
+                var tid = T.songMap[index].Team;
+                var tindex = Util.getArrayIndexForObjWithAttr(SLS.progress, "Team", tid);
+                b = SLS.progress[tindex].Control;
                 $(b).data().elapsed++;
                 //song completion as a percentage
                 complete = ($(b).data().elapsed / length) * 100;
