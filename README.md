@@ -8,9 +8,12 @@ The synthesizer generation is being supplied by [Band.js](https://github.com/mee
 
 The tool supports multiple simultaneous "songs", tempo changes and volume changes.  It also supports playback on most modern browsers (recent Chrome, Firefox, Edge, Safari), and also includes touch support for mobile devices!
 
+There is a live version here: [https://stephencwright.co.uk/stache-lag](https://stephencwright.co.uk/stache-lag)
+
 ## Known issues
 
 * Bug with Band.js which causes a javascript error in low-tempo scenarios (recommended tempo is > 100)
+* Bug with Band.js which incorrectly reports remaining time in high-tempo scenarios
 
 ## Libraries Used
 
