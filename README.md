@@ -10,6 +10,8 @@ The tool supports multiple simultaneous "songs", tempo changes and volume change
 
 There is a live version here: [https://stephencwright.co.uk/stache-lag](https://stephencwright.co.uk/stache-lag)
 
+`Time spent: ~10hrs`
+
 ## Known issues
 
 * Bug with Band.js which causes a javascript error in low-tempo scenarios (recommended tempo is > 100)

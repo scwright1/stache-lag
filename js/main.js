@@ -280,7 +280,6 @@ if (typeof SLS === "undefined") {
             if(pindex !== -1) {
                 $(SLS.progress[pindex].Control).width(0);
                 $(SLS.progress[pindex].Control).data().elapsed = 0;
-                console.log('tock');
             }
 
         } else {
@@ -297,8 +296,10 @@ if (typeof SLS === "undefined") {
         var index = Util.getArrayIndexForObjWithAttr(T.songMap, "Conductor", _this);
         if(index !== -1) {
             var id = T.songMap[index].Team;
+            var player = $('.player-controls').find("[data-team-id='"+id+"']").parent();
             T.songMap[index].Playing = false;
-            var player = $('.player-controls').find("[data-team-id='"+id+"']");
+            console.log($(player));
+            /*var player = $('.player-controls').find("[data-team-id='"+id+"']");
             if(player) {
                 $(player).children().find('.play-pause').addClass('paused');
             } else {
@@ -306,7 +307,7 @@ if (typeof SLS === "undefined") {
             var pindex = Util.getArrayIndexForObjWithAttr(SLS.progress, "Team", id);
             if(pindex !== -1) {
                 $(SLS.progress[pindex].Control).width(0);
-            }
+            } */
         }
     };
 
@@ -320,8 +321,9 @@ if (typeof SLS === "undefined") {
         var length = _this.getTotalSeconds();
         var index = Util.getArrayIndexForObjWithAttr(T.songMap, "Conductor", _this);
         if(index !== -1) {
+            //only update if the song is currently playing
+            //this fixes the edge case where we press the stop button and the tick function fires again
             if(T.songMap[index].Playing) {
-                console.log('tick');
                 b = SLS.progress[T.songMap[index].Team].Control;
                 $(b).data().elapsed++;
                 //song completion as a percentage
