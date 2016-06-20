@@ -10,7 +10,7 @@ The tool supports 6 simultaneous "songs", tempo changes and volume changes.  It 
 
 There is a live version here: [https://stephencwright.co.uk/stache-lag](https://stephencwright.co.uk/stache-lag)
 
-`Time spent: ~10hrs`
+`Time spent: ~12hrs`
 
 ## Known Issues
 

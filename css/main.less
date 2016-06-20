@@ -38,23 +38,24 @@ html, body {
                 > .title {
                     font-family: "Source Sans Pro", sans-serif;
                     float: left;
-                    width: 50%;
+                    width: 40%;
                     height: 70px;
                     margin: 10px;
                     line-height: 70px;
                     font-weight: 200;
-                    font-size: 28px;
+                    font-size: 24px;
                 }
                 > .race-info {
+                    width: 40%;
                     float: right;
                     height: 70px;
                     margin: 10px;
-                    line-height: 70px;
-                    font-size: 20px;
+                    line-height: 35px;
+                    font-size: 14px;
                     font-weight: 200;
                     color: @sl-white;
                     > .race-name-container {
-                        float: left;
+                        float: right;
                         > .race-name-title {
                             float: left;
                         }
@@ -65,19 +66,19 @@ html, body {
                         }
                     }
                     > .race-group-container {
-                        float: left;
+                        float: right;
                         margin-left: 10px;
                         > .group-title {
                             float: left;
-                            font-size: 20px;
+                            font-size: 14px;
                             font-weight: 200;
                         }
                         > select {
                             margin-left: 6px;
-                            height: 32px;
-                            line-height: 32px;
+                            height: 24px;
+                            line-height: 24px;
                             width: 60px;
-                            font-size: 20px;
+                            font-size: 14px;
                             font-weight: 200;
                             background-color: lighten(@sl-grey, 5%);
                             color: @sl-white;
@@ -209,6 +210,53 @@ html, body {
 }
 
 @media screen and (min-width: 600px) {
+    body {
+        #content {
+            #controlbar {
+                > .race-info {
+                    float: right;
+                    height: 70px;
+                    margin: 10px;
+                    line-height: 70px;
+                    font-size: 20px;
+                    font-weight: 200;
+                    color: @sl-white;
+                    > .race-name-container {
+                        float: right;
+                        > .race-name-title {
+                            float: left;
+                        }
+                        > .race-name {
+                            float: right;
+                            font-weight: 300;
+                            margin-left: 6px;
+                        }
+                    }
+                    > .race-group-container {
+                        float: right;
+                        margin-left: 10px;
+                        > .group-title {
+                            float: left;
+                            font-size: 20px;
+                            font-weight: 200;
+                        }
+                        > select {
+                            margin-left: 6px;
+                            height: 32px;
+                            line-height: 32px;
+                            width: 60px;
+                            font-size: 20px;
+                            font-weight: 200;
+                            background-color: lighten(@sl-grey, 5%);
+                            color: @sl-white;
+                            border: none;
+                            border-radius: 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 //utilities
