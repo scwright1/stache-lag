@@ -83,8 +83,6 @@ $(document).ready(function() {
         e.preventDefault();
     });
 
-    //var tick = setInterval(SLS.updateProgressBars, 1000);
-
 
 });
 
@@ -115,7 +113,7 @@ if (typeof T === "undefined") {
     T.startWidth = 0;
 
     T.init = function() {
-        for (var i = 0; i < 9; i++) {
+        for (var i = 0; i < 8; i++) {
             T.keys.forEach(function(key, index) {
                 T.toneMap.push(key+i);
             });
@@ -133,12 +131,14 @@ if (typeof T === "undefined") {
 
 if (typeof SLS === "undefined") {
 
-
     var SLS = {};
 
     SLS.teams = {};
+
     SLS.tones = [];
+
     SLS.audio = [];
+
     SLS.progress = [];
 
     SLS.loadData = function(dataset) {
@@ -210,7 +210,9 @@ if (typeof SLS === "undefined") {
                         /**
                          * Might want to change this in the future!
                          * - for now, remove any instances where speed is 0 (therefore the knots would be "30")
+                         * also make sure that we don't include any notes that are outside of the available range
                          */
+                         knots = Util.clamp(knots, 0, 95);
                          if(knots !== 30) {
                             toneArray.push(knots);
                          }
@@ -272,7 +274,7 @@ if (typeof SLS === "undefined") {
         if(index !== -1) {
             T.songMap[index].Player.stop();
             T.songMap[index].Playing = false;
-            $(obj).next().toggleClass('paused');
+            $(obj).next().addClass('paused');
 
             var pindex = Util.getArrayIndexForObjWithAttr(SLS.progress, "Team", id);
             if(pindex !== -1) {
@@ -326,43 +328,6 @@ if (typeof SLS === "undefined") {
             }
         }
     };
-
-/*
-    SLS.updateProgressBars = function() {
-        T.songMap.forEach(function(team, i) {
-            if(team.Playing === true) {
-                var progressBar, conductor = {};
-                var pindex = Util.getArrayIndexForObjWithAttr(SLS.progress, "Team", team.Team);
-                var cindex = Util.getArrayIndexForObjWithAttr(T.songMap, "Team", team.Team);
-                if(pindex !== -1) {
-                    progressBar = SLS.progress[pindex].Control;
-                    if(cindex !== -1) {
-
-                        //get a percentage of the song already completed
-                        var totalTime = T.songMap[cindex].Conductor.getTotalSeconds();
-                        var elapsedTime = SLS.progress[pindex].Elapsed + 1;
-                        var remainingTime = totalTime - elapsedTime;
-
-                        //get the remaining space
-                        var totalWidth = $(progressBar).parent().width();
-                        var elapsedWidth = $(progressBar).width();
-                        var remainingSpace = totalWidth - elapsedWidth;
-
-                        //get the increment size
-                        var increment = remainingSpace / remainingTime;
-
-                        //now set the width
-                        var newWidth = elapsedWidth + increment;
-                        $(progressBar).width(newWidth);
-
-                        //update the elapsed tick
-                        SLS.progress[pindex].Elapsed = elapsedTime;
-                    }
-                }
-            }
-        });
-    };
-*/
 
     //helper function, determine starting size for master tempo and master volume sliders
     SLS.setupMasterControlSliders = function() {
