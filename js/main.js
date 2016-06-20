@@ -308,6 +308,9 @@ if (typeof SLS === "undefined") {
         }
     };
 
+    /**
+    *   callback function for BandJS's onTickerCallback.  Updates progress bar and elapsed time count for the current instance
+    **/
     SLS.onTick = function() {
         var b = {};
         var complete = 0;
