@@ -54,7 +54,6 @@ $(document).ready(function() {
                 result = Util.clamp(Math.round(((percent / 100)*$('#master-controls').width())/scale), 30, 300);
                 T.tempo = result;
 
-                //todo - set the tempo of each of the playing songs
                 T.songMap.forEach(function(song, index) {
                     song.Conductor.setTempo(T.tempo);
                 });
@@ -116,7 +115,6 @@ if (typeof T === "undefined") {
     T.startWidth = 0;
 
     T.init = function() {
-
         for (var i = 0; i < 9; i++) {
             T.keys.forEach(function(key, index) {
                 T.toneMap.push(key+i);
@@ -296,18 +294,14 @@ if (typeof SLS === "undefined") {
         var index = Util.getArrayIndexForObjWithAttr(T.songMap, "Conductor", _this);
         if(index !== -1) {
             var id = T.songMap[index].Team;
-            var player = $('.player-controls').find("[data-team-id='"+id+"']").parent();
+            var player = $('.player-controls[data-team-id="'+id+'"]');
             T.songMap[index].Playing = false;
-            console.log($(player));
-            /*var player = $('.player-controls').find("[data-team-id='"+id+"']");
-            if(player) {
-                $(player).children().find('.play-pause').addClass('paused');
-            } else {
-            }
+            $(player).find('.play-pause').addClass('paused');
             var pindex = Util.getArrayIndexForObjWithAttr(SLS.progress, "Team", id);
             if(pindex !== -1) {
                 $(SLS.progress[pindex].Control).width(0);
-            } */
+                $(SLS.progress[pindex].Control).data().elapsed = 0;
+            }
         }
     };
 
