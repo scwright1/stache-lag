@@ -281,6 +281,8 @@ if (typeof SLS === "undefined") {
 
                 var toneArray = [];
 
+                var bearingArray = [];
+
                 team.positions.forEach(function(position, j) {
 
                     positionArray.push(position);
@@ -295,58 +297,65 @@ if (typeof SLS === "undefined") {
 
                     //ok, so find the distance travelled between each polled point
                     //Ignore if we're on the first point (Can't work out a speed here!)
-
-                    var tD = 0;
-
-                    var pD = 0;
-
                     var knots = 0;
 
                     if(j > 0) {
 
-                        //get the position delta
+                        //distance delta
+                        var distance = Math.round(SLS.haversine(set, positionArray[j-1]));
 
-                        pD = (positionArray[j-1].dtf) - (set.dtf);
-
-                        //get the time delta
-
-                        tD = set.at - positionArray[j-1].at;
-
-                        //so that gives us the time elapsed between the previous poll and now (in seconds)
+                        //time delta
+                        var time = (set.at - positionArray[j-1].at);
 
                         //from that, we can work out the speed in knots
 
                         //1 knot = 1.852km/h
 
-                        //so if we travel dtfDiff metres in timeDiff seconds, that means:
+                        //so if we travel delta metres in delta seconds, that means:
 
-                        // dtfDiff / timeDiff = metres per second,  * 3600 = metres per hour, / 1000 = km/h, / 1.852 = knots (!)
+                        // distanceDelta / timeDelta = metres per second,  * 3600 = metres per hour, / 1000 = km/h, / 1.852 = knots (!)
 
                         //finally, we want to round to the nearest decimal (to keep things simple)
 
                         // and normalize the value into a range that is most appropriate to the notes (there are 88 notes, so we add 30)
-
-                        knots = Math.round((((pD / tD) * 3600) / 1000) / 1.852) + 30;
+                        knots = Math.round((((distance / time) * 3600) / 1000) / 1.852) + 30;
 
                         /**
                          * Might want to change this in the future!
                          * - for now, remove any instances where speed is 0 (therefore the knots would be "30")
                          * also make sure that we don't include any notes that are outside of the available range
                          */
+                        knots = Util.clamp(knots, 0, 95);
 
-                         knots = Util.clamp(knots, 0, 95);
-
-                         if(knots !== 30) {
+                        if(knots !== 30) {
 
                             toneArray.push(knots);
 
-                         }
+                            //extra!
+                            //bearing!
+                            var b = Math.round(SLS.bearing(set, positionArray[j-1]));
+
+                            //this feels wrong but I can't figure out a better way of doing it!
+                            if(b>=0 && b<30) { bearingArray.push(0); }
+                            else if(b>=30 && b<60) { bearingArray.push(1); }
+                            else if(b>=60 && b<90) { bearingArray.push(2); }
+                            else if(b>=90 && b<120) { bearingArray.push(3); }
+                            else if(b>=120 && b<150) { bearingArray.push(4); }
+                            else if(b>=150 && b<180) { bearingArray.push(5); }
+                            else if(b>=180 && b<210) { bearingArray.push(6); }
+                            else if(b>=210 && b<240) { bearingArray.push(7); }
+                            else if(b>=240 && b<270) { bearingArray.push(8); }
+                            else if(b>=270 && b<300) { bearingArray.push(9); }
+                            else if(b>=300 && b<330) { bearingArray.push(10); }
+                            else bearingArray.push(11);
+
+                        }
 
                     }
 
                 });
 
-                SLS.tones.push({"Team": team.name, "Tones": toneArray});
+                SLS.tones.push({"Team": team.name, "Tones": toneArray, "Length": bearingArray});
 
                 resolve();
 
@@ -359,6 +368,48 @@ if (typeof SLS === "undefined") {
         return processed;
 
     };
+
+    //calculate great-circle distance between two points (gps coords)
+    SLS.haversine = function(curr, prev) {
+
+        var R           = 6371e3; //earth's radius in metres
+
+        var alatr       = prev.lat.toRadians();
+
+        var blatr       = curr.lat.toRadians();
+
+        var deltalat    = (curr.lat - prev.lat);
+
+        var deltalon    = (curr.lon - prev.lon);
+
+        var latr        = deltalat.toRadians();
+
+        var lonr        = deltalon.toRadians();
+
+        var a           = Math.sin(latr / 2) * Math.sin(latr / 2) +
+                          Math.cos(alatr) * Math.cos(blatr) *
+                          Math.sin(lonr / 2) * Math.sin(lonr / 2);
+
+        var c           = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+        return (R * c);
+
+    };
+
+    //calculate the bearing between two points (gps coords)
+    SLS.bearing = function(curr, prev) {
+
+        var deltalon = (curr.lon - prev.lon);
+
+        var y = Math.sin(deltalon) * Math.cos(curr.lat);
+
+        var x = Math.cos(prev.lat)*Math.sin(curr.lat) - Math.sin(prev.lat)*Math.cos(curr.lat)*Math.cos(deltalon);
+
+        var brng = Math.atan2(y, x).radiansToDegrees();
+
+        return 360 - ((brng + 360) % 360);
+
+    }
 
     //for the team that wants it's "song" played, process the tones and create the song
     SLS.processTones = function(team) {
@@ -387,7 +438,7 @@ if (typeof SLS === "undefined") {
 
             //should be able to generate a tone and play it
 
-            song.note('eighth', T.toneMap[tone]);
+            song.note(T.lengths[SLS.tones[team].Length[j]], T.toneMap[tone]);
 
         });
 
@@ -583,6 +634,8 @@ if (typeof T === "undefined") {
 
     T.keys = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
+    T.lengths = ["whole", "dottedHalf", "half", "dottedQuarter", "tripletHalf", "quarter", "dottedEighth", "tripletQuarter", "eighth", "dottedSixteenth", "tripletEighth", "sixteenth"];
+
     T.toneMap = [];
 
     T.songMap = [];
@@ -651,4 +704,14 @@ if (typeof Util === "undefined") {
 
     };
 
+}
+
+//Overload Number prototype for Radians
+Number.prototype.toRadians = function() {
+    return this * Math.PI / 180;
+}
+
+//Overload Number prototype for RadiansToDegrees
+Number.prototype.radiansToDegrees = function() {
+    return this * 180 / Math.PI;
 }
